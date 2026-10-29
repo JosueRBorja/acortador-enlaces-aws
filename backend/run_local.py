@@ -11,7 +11,7 @@ import boto3
 import uvicorn
 from moto import mock_aws
 
-# Permite ejecutar `python scripts/run_local.py` desde cualquier carpeta.
+# Permite ejecutar `python backend/run_local.py` desde cualquier carpeta.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 

@@ -9,13 +9,15 @@ Aplicación con HTML, CSS y JavaScript en **S3**, una API **FastAPI en EC2** y p
 ## Estructura
 
 ```text
-backend/app/        API, configuración, validación, servicio y acceso a DynamoDB
+backend/            API y sus archivos de desarrollo y despliegue
 frontend/           HTML, CSS, JavaScript y dirección de la API
-deploy/             Servicio systemd para EC2
-infrastructure/     Plantilla CloudFormation de los recursos AWS
-scripts/run_local.py  Demo local sin credenciales AWS
-tests/              Pruebas de los endpoints y la persistencia
+requirements.txt    Dependencias para ejecutar el backend
+README.md           Instrucciones del proyecto
 ```
+
+Dentro de `backend`, `app/` separa configuración, validación, lógica y acceso a DynamoDB;
+`deploy/` contiene CloudFormation y systemd; `tests/` contiene las pruebas y `run_local.py`
+inicia la demo. `.env.example` y `.gitignore` permiten configurar el entorno y excluir credenciales.
 
 ## Ejecutar localmente
 
@@ -25,8 +27,8 @@ Requiere Python 3.12 o posterior y Git. Abre una terminal de PowerShell:
 git clone https://github.com/JosueRBorja/acortador-enlaces-aws.git
 cd acortador-enlaces-aws
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe scripts\run_local.py
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+.\.venv\Scripts\python.exe backend\run_local.py
 ```
 
 Abre [http://127.0.0.1:5500](http://127.0.0.1:5500). La demo inicia interfaz y API con DynamoDB simulado mediante Moto; no usa AWS. Los datos se borran al detenerla con **Ctrl+C**. Los puertos 5500 y 8000 deben estar libres.
@@ -37,7 +39,7 @@ Para ejecutar el backend contra una tabla real, copia `.env.example` a `.env`, c
 .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
-`requirements.txt` fija las dependencias de ejecución; `requirements-dev.txt` añade las herramientas de desarrollo.
+`requirements.txt` fija las dependencias de ejecución; `backend/requirements-dev.txt` añade las herramientas de desarrollo.
 
 ## API
 
@@ -60,7 +62,7 @@ Un UUID inexistente devuelve **404**, una URL inválida **422** y un fallo de al
 
 1. Publica el código en un repositorio público de GitHub o GitLab.
 2. En EC2 crea un par de claves y guarda su archivo privado fuera del repositorio.
-3. En CloudFormation carga `infrastructure/stack.yaml`. Indica el repositorio HTTPS, rama `main`, nombre del par de claves y tu IPv4 pública seguida de `/32` para SSH.
+3. En CloudFormation carga `backend/deploy/stack.yaml`. Indica el repositorio HTTPS, rama `main`, nombre del par de claves y tu IPv4 pública seguida de `/32` para SSH.
 4. Reconoce la creación del rol IAM y espera `CREATE_COMPLETE`. EC2 instala el backend desde GitHub y configura systemd; esta instalación puede tardar unos minutos adicionales.
 5. En las salidas de la pila copia `ApiUrl` a `API_BASE_URL` de `frontend/config.js` para la versión que publicarás.
 6. Sube `index.html`, `styles.css`, `app.js` y `config.js` a la raíz del bucket indicado en `BucketName`. Abre `WebsiteUrl`.
@@ -78,7 +80,7 @@ sudo systemctl restart nexo
 ## Pruebas y entrega
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest backend\tests -q
 ```
 
 Las **14 pruebas** verifican creación, UUID únicos, validación, consulta, redirección 307, errores 404, CORS, fallos de almacenamiento y persistencia al recrear la aplicación usando DynamoDB emulado.

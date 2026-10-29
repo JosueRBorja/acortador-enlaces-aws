@@ -190,7 +190,7 @@ Resources:
           ENV
           chown root:nexo /etc/nexo.env
           chmod 640 /etc/nexo.env
-          cp deploy/nexo.service /etc/systemd/system/nexo.service
+          cp backend/deploy/nexo.service /etc/systemd/system/nexo.service
           systemctl daemon-reload
           systemctl enable --now nexo
   PublicAddress:
