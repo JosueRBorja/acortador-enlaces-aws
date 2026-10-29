@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Convierte tus enlaces en una dirección fácil de compartir.">
+  <title>Nexo · Acortador de enlaces</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="container"><a class="brand" href="./" aria-label="Nexo, inicio"><span class="logo">↗</span> nexo<span class="dot">.</span></a><span class="header-note">Menos distancia. Más conexiones.</span></header>
+  <main class="container">
+    <section class="intro" aria-labelledby="title">
+      <p class="eyebrow"><span></span> UN ENLACE, MUCHAS POSIBILIDADES</p>
+      <h1>Las buenas ideas<br>merecen <em>compartirse.</em></h1>
+      <p class="subtitle">Dale a tu próxima conexión una nueva dirección.<br>Pega tu enlace y déjanos el resto.</p>
+    </section>
+    <section class="card" aria-label="Crear un enlace corto">
+      <div class="card-heading"><span class="step">01 /</span><h2>Tu próximo enlace empieza aquí</h2></div>
+      <form id="shorten-form">
+        <label for="original-url">Enlace original</label>
+        <div class="input-row"><input id="original-url" name="original_url" type="url" placeholder="https://ejemplo.com/tu-proxima-gran-idea" required maxlength="2083" autocomplete="url" aria-describedby="url-help"><button id="submit-button" type="submit">Crear enlace <span aria-hidden="true">↗</span></button></div>
+        <p id="url-help" class="help">Usa una dirección que comience con https:// o http://</p>
+      </form>
+      <p id="message" class="message" role="status" aria-live="polite" hidden></p>
+      <section id="result" class="result" aria-labelledby="result-title" hidden>
+        <p id="result-title" class="result-title">LISTO PARA COMPARTIR</p>
+        <div class="result-row"><a id="short-url" href="#" target="_blank" rel="noopener noreferrer"></a><button id="copy-button" type="button">Copiar enlace</button></div>
+        <p class="help">Cada enlace recibe un identificador único y permanente.</p>
+        <p id="copy-status" role="status" aria-live="polite"></p>
+      </section>
+    </section>
+    <section class="features" aria-label="Cómo funciona"><article><span>01</span><h3>Pega tu enlace</h3><p>Un artículo, un proyecto o tu próxima gran idea.</p></article><article><span>02</span><h3>Crea una conexión</h3><p>Obtén una dirección única para tu destino.</p></article><article><span>03</span><h3>Compártelo donde quieras</h3><p>Copia, envía y conecta con un solo clic.</p></article></section>
+  </main>
+  <footer class="container"><span>nexo. / Un camino más directo.</span><span>Proyecto de Arquitectura en la Nube</span></footer>
+</body>
+</html>

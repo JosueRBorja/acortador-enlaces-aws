@@ -1,0 +1,23 @@
+[Unit]
+Description=Nexo FastAPI URL shortener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nexo
+Group=nexo
+WorkingDirectory=/opt/nexo
+EnvironmentFile=/etc/nexo.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/nexo/.venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

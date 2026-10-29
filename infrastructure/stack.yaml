@@ -1,0 +1,220 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Nexo - S3 static website, EC2 FastAPI and DynamoDB (educational HTTP deployment)
+Parameters:
+  RepositoryUrl:
+    Type: String
+    Description: Public HTTPS GitHub/GitLab repository URL (without credentials)
+    AllowedPattern: 'https://(github.com|gitlab.com)/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(\.git)?'
+  RepositoryRef:
+    Type: String
+    Default: main
+    Description: Branch or tag to deploy
+    AllowedPattern: '[A-Za-z0-9_./-]+'
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 key pair in this region
+  SshCidr:
+    Type: String
+    Description: Your public IPv4 followed by /32 - SSH restricted to that address
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/32'
+  UbuntuAmi:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+Resources:
+  Network:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Network
+      InternetGatewayId: !Ref InternetGateway
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Network
+      CidrBlock: 10.42.1.0/24
+      MapPublicIpOnLaunch: true
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Network
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  SubnetRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTable
+  LinksTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: short_code
+          AttributeType: S
+      KeySchema:
+        - AttributeName: short_code
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  FrontendReadPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+  BackendRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LinkItemsOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !GetAtt LinksTable.Arn
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref BackendRole
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public API and restricted administration
+      VpcId: !Ref Network
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+          Description: Public HTTP API called by visitors browsers
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SshCidr
+          Description: SSH from administrator IPv4 only
+  BackendInstance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - InternetRoute
+      - SubnetRoute
+    Properties:
+      ImageId: !Ref UbuntuAmi
+      InstanceType: t3.micro
+      KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref BackendSecurityGroup
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 12
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-backend'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y python3 python3-venv python3-pip git
+          useradd --system --user-group --home-dir /opt/nexo --shell /usr/sbin/nologin nexo
+          git clone --depth 1 --branch '${RepositoryRef}' '${RepositoryUrl}' /opt/nexo
+          cd /opt/nexo
+          python3 -m venv .venv
+          .venv/bin/pip install --requirement requirements.lock.txt
+          cat > /etc/nexo.env <<'ENV'
+          AWS_REGION=${AWS::Region}
+          DYNAMODB_TABLE=${LinksTable}
+          PUBLIC_BASE_URL=http://${PublicAddress}:8000
+          CORS_ORIGINS=["${FrontendBucket.WebsiteURL}"]
+          LOG_LEVEL=INFO
+          ENV
+          chown root:nexo /etc/nexo.env
+          chmod 640 /etc/nexo.env
+          cp deploy/nexo.service /etc/systemd/system/nexo.service
+          systemctl daemon-reload
+          systemctl enable --now nexo
+  PublicAddress:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+  AddressAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref BackendInstance
+      AllocationId: !GetAtt PublicAddress.AllocationId
+Outputs:
+  WebsiteUrl:
+    Value: !GetAtt FrontendBucket.WebsiteURL
+  BucketName:
+    Value: !Ref FrontendBucket
+  ApiUrl:
+    Value: !Sub 'http://${PublicAddress}:8000'
+  ApiDocs:
+    Value: !Sub 'http://${PublicAddress}:8000/docs'
+  TableName:
+    Value: !Ref LinksTable
+  InstanceId:
+    Value: !Ref BackendInstance
+  PublicIp:
+    Value: !Ref PublicAddress
