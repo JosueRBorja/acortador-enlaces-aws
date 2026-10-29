@@ -4,9 +4,9 @@ Aplicación académica con **HTML, CSS y JavaScript en S3**, **FastAPI en EC2** 
 
 Repositorio: https://github.com/JosueRBorja/acortador-enlaces-aws
 
-> Estado: código e infraestructura preparados para desplegar. Las pruebas locales utilizan Moto para emular DynamoDB; no constituyen evidencia de un despliegue en AWS. Completar la verificación de `docs/ENTREGA.md` después de publicar.
+> Estado: **desplegado y verificado en AWS el 29 de octubre de 2026**, en `us-east-1`. [Abrir la aplicación en S3](http://nexo-acortador-frontendbucket-fg64zfafebef.s3-website-us-east-1.amazonaws.com/) · [API en EC2](http://13.216.86.173:8000/docs). Ver [resultados y evidencias](docs/RESULTADOS_AWS.md). Las pruebas locales con Moto siguen siendo independientes del despliegue real.
 
-Verificación local: **14 pruebas aprobadas** en Python 3.14.4, revisión estática sin hallazgos, dependencias consistentes, JavaScript con sintaxis válida y plantilla YAML analizada. Se comprobó visualmente la interfaz y su mensaje de API no disponible. La plantilla aún requiere validación y ejecución en CloudFormation. La combinación actual Starlette/httpx emite un aviso de futura deprecación de TestClient, sin fallos en las pruebas.
+Verificación local: **14 pruebas aprobadas** en Python 3.14.4, revisión estática sin hallazgos, dependencias consistentes y JavaScript con sintaxis válida. CloudFormation completó la creación de los 16 recursos; la plantilla pasó cfn-lint y las seis reglas de seguridad de `infrastructure/security.guard`. Se comprobó el formulario desde S3 y la persistencia en DynamoDB después de reiniciar systemd en EC2. La combinación actual Starlette/httpx emite un aviso de futura deprecación de TestClient, sin fallos en las pruebas.
 
 ```mermaid
 flowchart LR

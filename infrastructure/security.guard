@@ -1,0 +1,33 @@
+# Reglas específicas de la práctica: S3 publica solo la interfaz y el puerto 8000
+# sirve la API pública. Estas dos excepciones están previstas por la arquitectura.
+rule encrypted_storage {
+  Resources.FrontendBucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration[*].ServerSideEncryptionByDefault.SSEAlgorithm == "AES256"
+  Resources.BackendInstance.Properties.BlockDeviceMappings[*].Ebs.Encrypted == true
+  Resources.LinksTable.Properties.SSESpecification.SSEEnabled == true
+}
+
+rule retain_link_data {
+  Resources.LinksTable.DeletionPolicy == "Retain"
+  Resources.LinksTable.UpdateReplacePolicy == "Retain"
+  Resources.FrontendBucket.DeletionPolicy == "Retain"
+}
+
+rule instance_metadata_v2 {
+  Resources.BackendInstance.Properties.MetadataOptions.HttpTokens == "required"
+}
+
+rule minimal_database_actions {
+  Resources.BackendRole.Properties.Policies[*].PolicyDocument.Statement[*].Action[*] IN ["dynamodb:GetItem", "dynamodb:PutItem"]
+}
+
+rule public_objects_read_only {
+  Resources.FrontendReadPolicy.Properties.PolicyDocument.Statement[*].Action == "s3:GetObject"
+  Resources.FrontendBucket.Properties.PublicAccessBlockConfiguration.BlockPublicAcls == true
+  Resources.FrontendBucket.Properties.PublicAccessBlockConfiguration.IgnorePublicAcls == true
+  Resources.FrontendBucket.Properties.OwnershipControls.Rules[*].ObjectOwnership == "BucketOwnerEnforced"
+}
+
+rule restricted_ssh_parameter {
+  Parameters.SshCidr.AllowedPattern == '(\d{1,3}\.){3}\d{1,3}/32'
+  Resources.BackendSecurityGroup.Properties.SecurityGroupIngress[1].CidrIp.Ref == "SshCidr"
+}

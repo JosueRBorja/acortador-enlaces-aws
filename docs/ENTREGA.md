@@ -2,18 +2,22 @@
 
 Repositorio: https://github.com/JosueRBorja/acortador-enlaces-aws
 
-Completar después de desplegar:
+Despliegue real verificado el 29 de octubre de 2026. Ver [resultados técnicos](RESULTADOS_AWS.md).
 
 | Evidencia | Valor real |
 | --- | --- |
-| URL del sitio S3 | Pendiente |
-| URL de API EC2 | Pendiente |
-| Región AWS | Pendiente |
-| Nombre de tabla | Pendiente |
-| UUID usado en las pruebas | Pendiente |
-| Enlace al video | Pendiente |
+| URL del sitio S3 | http://nexo-acortador-frontendbucket-fg64zfafebef.s3-website-us-east-1.amazonaws.com/ |
+| URL de API EC2 | http://13.216.86.173:8000 |
+| Región AWS | us-east-1 |
+| Nombre de tabla | nexo-acortador-LinksTable-TUGV9EVN6K2C |
+| UUID usado en persistencia tras reinicio | 5d12b480-cf5c-47c9-bee3-ab1a45f35f63 |
+| UUID creado desde la interfaz S3 | 65be34b4-f972-40c7-b70d-424186f91282 |
+| Enlace al video | Pendiente de grabar y publicar por el estudiante |
 
-## Pruebas obligatorias
+## Pruebas obligatorias para mostrar en el video
+
+La integración ya fue probada con solicitudes HTTP, consultas de AWS y navegador.
+Esta lista queda pendiente de marcar durante la grabación, cuando se muestren las evidencias.
 
 - [ ] Abrir WebsiteUrl de S3 y mostrar la interfaz cargada.
 - [ ] Ingresar `https://www.example.com/articulos/arquitectura-cloud` o una página real que puedas abrir.
