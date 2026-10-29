@@ -32,6 +32,23 @@ docs/ENTREGA.md     Lista de evidencias y guion del video
 
 ## Preparación local (PowerShell)
 
+### Demo sin cuenta AWS
+
+Desde la carpeta del proyecto, con las dependencias de desarrollo instaladas:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_local.py
+```
+
+Abre `http://127.0.0.1:5500`. El comando sirve la interfaz y la API con DynamoDB
+emulado por Moto, sin contactar AWS ni requerir claves. Puedes crear, copiar, abrir
+y consultar enlaces. Detén ambos servidores con Ctrl+C. **Los datos de esta demo
+se pierden al cerrar el proceso**: no sirve para demostrar persistencia real en AWS.
+La configuración de la demo se aísla de `.env` y del destino EC2 de `config.js`.
+Los puertos 5500 y 8000 deben estar libres.
+
+### Instalación y ejecución con DynamoDB real
+
 Python 3.12 o posterior recomendado; Git y VS Code. Para empezar desde GitHub:
 
 ```powershell
@@ -59,7 +76,7 @@ En otra terminal sirve la interfaz por HTTP:
 .\.venv\Scripts\python.exe -m http.server 5500 --bind 127.0.0.1 --directory frontend
 ```
 
-Abre `http://127.0.0.1:5500` y la documentación interactiva `http://127.0.0.1:8000/docs`. No abras `index.html` mediante `file://`. La API normal utiliza DynamoDB; no hay almacenamiento alternativo en memoria.
+Abre `http://127.0.0.1:5500` y la documentación interactiva `http://127.0.0.1:8000/docs`. No abras `index.html` mediante `file://`. La API normal utiliza DynamoDB sin alternativa automática en memoria; la demo emulada solo se activa ejecutando explícitamente `scripts/run_local.py`.
 
 ## Contrato de API
 
