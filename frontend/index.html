@@ -3,37 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Convierte tus enlaces en una dirección fácil de compartir.">
-  <title>Nexo · Acortador de enlaces</title>
+  <meta name="description" content="Un camino más sencillo para compartir tus ideas. Crea, copia y comparte tus enlaces con Nexo.">
+  <title>Nexo · Pequeños enlaces, grandes conexiones</title>
   <link rel="stylesheet" href="styles.css">
   <script src="config.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="container"><a class="brand" href="./" aria-label="Nexo, inicio"><span class="logo">↗</span> nexo<span class="dot">.</span></a><span class="header-note">Menos distancia. Más conexiones.</span></header>
+  <a class="skip-link" href="#crear">Ir al formulario</a>
+  <header class="container header">
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#crear">Crear enlace</a>
+      <a href="#como-funciona">Cómo funciona</a>
+    </nav>
+    <a class="brand" href="./" aria-label="Nexo, inicio">nexo.</a>
+    <span class="header-note">Hecho para compartir <span aria-hidden="true">↗</span></span>
+  </header>
+
   <main class="container">
     <section class="intro" aria-labelledby="title">
-      <p class="eyebrow"><span></span> UN ENLACE, MUCHAS POSIBILIDADES</p>
-      <h1>Las buenas ideas<br>merecen <em>compartirse.</em></h1>
-      <p class="subtitle">Dale a tu próxima conexión una nueva dirección.<br>Pega tu enlace y déjanos el resto.</p>
+      <p class="eyebrow">Un camino más directo.</p>
+      <h1 id="title">Pequeños enlaces.<br>Grandes conexiones.</h1>
+      <p class="subtitle">Un artículo que te encanta. Un proyecto que empieza.<br>Sea lo que sea, dale una dirección para compartir.</p>
     </section>
-    <section class="card" aria-label="Crear un enlace corto">
-      <div class="card-heading"><span class="step">01 /</span><h2>Tu próximo enlace empieza aquí</h2></div>
+
+    <section id="crear" class="link-studio" aria-labelledby="form-title">
+      <div class="section-heading">
+        <h2 id="form-title">Tu próxima conexión empieza aquí.</h2>
+        <span class="section-index" aria-hidden="true">(01 — 03)</span>
+      </div>
       <form id="shorten-form">
-        <label for="original-url">Enlace original</label>
-        <div class="input-row"><input id="original-url" name="original_url" type="url" placeholder="https://ejemplo.com/tu-proxima-gran-idea" required maxlength="2083" autocomplete="url" aria-describedby="url-help"><button id="submit-button" type="submit">Crear enlace <span aria-hidden="true">↗</span></button></div>
-        <p id="url-help" class="help">Usa una dirección que comience con https:// o http://</p>
+        <label class="visually-hidden" for="original-url">Enlace original</label>
+        <div class="input-row">
+          <input id="original-url" name="original_url" type="url"
+            placeholder="Pega aquí tu enlace original" required maxlength="2083"
+            autocomplete="url" aria-describedby="url-help">
+          <button id="submit-button" type="submit">Crear enlace <span aria-hidden="true">↗</span></button>
+        </div>
+        <p id="url-help" class="help">Comienza con https:// o http://. Nosotros nos encargamos del resto.</p>
       </form>
       <p id="message" class="message" role="status" aria-live="polite" hidden></p>
       <section id="result" class="result" aria-labelledby="result-title" hidden>
-        <p id="result-title" class="result-title">LISTO PARA COMPARTIR</p>
-        <div class="result-row"><a id="short-url" href="#" target="_blank" rel="noopener noreferrer"></a><button id="copy-button" type="button">Copiar enlace</button></div>
-        <p class="help">Cada enlace recibe un identificador único y permanente.</p>
-        <p id="copy-status" role="status" aria-live="polite"></p>
+        <p id="result-title">Tu enlace, listo para salir al mundo.</p>
+        <div class="result-row">
+          <a id="short-url" href="#" target="_blank" rel="noopener noreferrer"></a>
+          <button id="copy-button" class="button-outline" type="button">Copiar enlace</button>
+        </div>
+        <p id="copy-status" class="help" role="status" aria-live="polite"></p>
       </section>
     </section>
-    <section class="features" aria-label="Cómo funciona"><article><span>01</span><h3>Pega tu enlace</h3><p>Un artículo, un proyecto o tu próxima gran idea.</p></article><article><span>02</span><h3>Crea una conexión</h3><p>Obtén una dirección única para tu destino.</p></article><article><span>03</span><h3>Compártelo donde quieras</h3><p>Copia, envía y conecta con un solo clic.</p></article></section>
+
+    <section id="como-funciona" class="features" aria-label="Cómo funciona">
+      <article>
+        <div class="illustration">
+          <svg viewBox="0 0 360 220" fill="none" aria-hidden="true">
+            <path d="M113 40 237 35 249 177 120 184 113 40Z"/>
+            <path d="m120 184-9 5-9-142 11-7M133 65l81-4m-79 17 60-4m-59 18 84-6"/>
+            <path d="M140 120c-7-8-16-2-15 6 2 10 15 10 19 3l8-11c6-8 18-5 18 4 1 8-9 14-15 8m-19-2 22-8"/>
+            <path d="m182 120 41-3m-85 32 68-5m-67 17 85-6M88 81l-12-5m16-9-6-12m171 88 13 5m-15 8 7 10"/>
+          </svg>
+        </div>
+        <div class="feature-title"><h3>Encuentra algo que compartir.</h3><span>01</span></div>
+        <p>Pega la dirección de ese artículo, proyecto o idea que merece llegar más lejos.</p>
+      </article>
+      <article>
+        <div class="illustration">
+          <svg viewBox="0 0 360 220" fill="none" aria-hidden="true">
+            <path d="M167 137c-12 16-31 25-47 14-15-11-14-28-2-43l32-39c13-16 32-22 47-10 13 11 14 26 5 40"/>
+            <path d="M157 145c12 11 28 13 42-3l35-43c14-16 13-33-1-44-14-12-30-8-42 4l-18 23" transform="translate(12 35)"/>
+            <path d="m153 130 49-57m-45 59 48-56M102 52l-9-13m22 7-2-18m-22 34-16-4m175 115 14 7m-19 4 6 15m9-35 17-1"/>
+          </svg>
+        </div>
+        <div class="feature-title"><h3>Dale una nueva dirección.</h3><span>02</span></div>
+        <p>Un clic y listo. Creamos un enlace único que lleva directamente a tu destino.</p>
+      </article>
+      <article>
+        <div class="illustration">
+          <svg viewBox="0 0 360 220" fill="none" aria-hidden="true">
+            <path d="m112 96 140-45-48 123-29-47-63-31Z"/>
+            <path d="m112 96 65 11 75-56-77 76-4 38 19-18m-15-20 2-20"/>
+            <path d="M139 148c-19-3-31 8-21 19 13 15 29-2 18-12-10-9-39-2-40 17-2 14 11 23 24 22M93 130l-15 9m9-24-20 2m161-83 4-13m12 17 9-8"/>
+          </svg>
+        </div>
+        <div class="feature-title"><h3>Deja que la idea viaje.</h3><span>03</span></div>
+        <p>Copia tu enlace y compártelo donde quieras. Al otro lado, la misma buena idea.</p>
+      </article>
+    </section>
   </main>
-  <footer class="container"><span>nexo. / Un camino más directo.</span><span>Proyecto de Arquitectura en la Nube</span></footer>
+
+  <footer class="container footer">
+    <span>nexo. — Conecta lo que importa.</span>
+    <a href="#crear">Un enlace más <span aria-hidden="true">↗</span></a>
+  </footer>
 </body>
 </html>

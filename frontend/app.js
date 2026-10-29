@@ -3,6 +3,7 @@
 const form = document.querySelector("#shorten-form");
 const input = document.querySelector("#original-url");
 const submit = document.querySelector("#submit-button");
+const submitLabel = [...submit.childNodes].map((node) => node.cloneNode(true));
 const message = document.querySelector("#message");
 const result = document.querySelector("#result");
 const link = document.querySelector("#short-url");
@@ -69,7 +70,7 @@ form.addEventListener("submit", async (event) => {
   } finally {
     clearTimeout(timeout);
     submit.disabled = false;
-    submit.textContent = "Crear enlace ↗";
+    submit.replaceChildren(...submitLabel.map((node) => node.cloneNode(true)));
   }
 });
 
