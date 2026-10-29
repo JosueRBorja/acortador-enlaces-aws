@@ -180,7 +180,7 @@ Resources:
           git clone --depth 1 --branch '${RepositoryRef}' '${RepositoryUrl}' /opt/nexo
           cd /opt/nexo
           python3 -m venv .venv
-          .venv/bin/pip install --requirement requirements.lock.txt
+          .venv/bin/pip install --requirement requirements.txt
           cat > /etc/nexo.env <<'ENV'
           AWS_REGION=${AWS::Region}
           DYNAMODB_TABLE=${LinksTable}

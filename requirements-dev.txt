@@ -3,4 +3,3 @@ pytest>=8.3,<10
 httpx>=0.28,<1
 moto[dynamodb]>=5.1,<6
 ruff>=0.11,<1
-PyYAML>=6,<7

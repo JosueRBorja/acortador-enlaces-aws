@@ -1,115 +1,90 @@
 # Nexo · Acortador de enlaces en AWS
 
-Aplicación académica con **HTML, CSS y JavaScript en S3**, **FastAPI en EC2** y **DynamoDB**. El UUID completo se genera exclusivamente en el backend. Cada acceso al enlace consulta DynamoDB y devuelve una redirección HTTP **307**.
+Aplicación con HTML, CSS y JavaScript en **S3**, una API **FastAPI en EC2** y persistencia en **DynamoDB**. El backend genera un UUID v4 y devuelve una redirección HTTP 307 al abrir el enlace.
 
-Repositorio: https://github.com/JosueRBorja/acortador-enlaces-aws
-
-> Estado: **desplegado y verificado en AWS el 29 de octubre de 2026**, en `us-east-1`. [Abrir la aplicación en S3](http://nexo-acortador-frontendbucket-fg64zfafebef.s3-website-us-east-1.amazonaws.com/) · [API en EC2](http://13.216.86.173:8000/docs). Ver [resultados y evidencias](docs/RESULTADOS_AWS.md). Las pruebas locales con Moto siguen siendo independientes del despliegue real.
-
-Verificación local: **14 pruebas aprobadas** en Python 3.14.4, revisión estática sin hallazgos, dependencias consistentes y JavaScript con sintaxis válida. CloudFormation completó la creación de los 16 recursos; la plantilla pasó cfn-lint y las seis reglas de seguridad de `infrastructure/security.guard`. Se comprobó el formulario desde S3 y la persistencia en DynamoDB después de reiniciar systemd en EC2. La combinación actual Starlette/httpx emite un aviso de futura deprecación de TestClient, sin fallos en las pruebas.
-
-```mermaid
-flowchart LR
-    U[Navegador] -->|HTML, CSS, JS| S[S3: sitio web estático]
-    U -->|fetch POST /shorten| E[EC2: FastAPI + Uvicorn + systemd]
-    E -->|PutItem / GetItem con rol IAM| D[(DynamoDB)]
-    U -->|GET /UUID| E
-    E -->|307 Location| O[URL original]
-```
+- [Aplicación publicada](http://nexo-acortador-frontendbucket-fg64zfafebef.s3-website-us-east-1.amazonaws.com/)
+- [Documentación de la API](http://13.216.86.173:8000/docs)
+- Región: `us-east-1`. Stack: `nexo-acortador`.
 
 ## Estructura
 
 ```text
-backend/app/        Configuración, esquemas, repositorio, servicio y API
-frontend/           Interfaz sin frameworks ni credenciales AWS
-infrastructure/     CloudFormation: red, S3, DynamoDB, IAM y EC2
-deploy/             Servicio systemd
-scripts/            Verificación integrada contra una API real
-tests/              Pruebas de API con DynamoDB emulado
-docs/DESPLIEGUE.md  Guía de publicación paso a paso
-docs/ENTREGA.md     Lista de evidencias y guion del video
+backend/app/        API, configuración, validación, servicio y acceso a DynamoDB
+frontend/           HTML, CSS, JavaScript y dirección de la API
+deploy/             Servicio systemd para EC2
+infrastructure/     Plantilla CloudFormation de los recursos AWS
+scripts/run_local.py  Demo local sin credenciales AWS
+tests/              Pruebas de los endpoints y la persistencia
 ```
 
-## Preparación local (PowerShell)
+## Ejecutar localmente
 
-### Demo sin cuenta AWS
-
-Desde la carpeta del proyecto, con las dependencias de desarrollo instaladas:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\run_local.py
-```
-
-Abre `http://127.0.0.1:5500`. El comando sirve la interfaz y la API con DynamoDB
-emulado por Moto, sin contactar AWS ni requerir claves. Puedes crear, copiar, abrir
-y consultar enlaces. Detén ambos servidores con Ctrl+C. **Los datos de esta demo
-se pierden al cerrar el proceso**: no sirve para demostrar persistencia real en AWS.
-La configuración de la demo se aísla de `.env` y del destino EC2 de `config.js`.
-Los puertos 5500 y 8000 deben estar libres.
-
-### Instalación y ejecución con DynamoDB real
-
-Python 3.12 o posterior recomendado; Git y VS Code. Para empezar desde GitHub:
+Requiere Python 3.12 o posterior y Git. Abre una terminal de PowerShell:
 
 ```powershell
 git clone https://github.com/JosueRBorja/acortador-enlaces-aws.git
 cd acortador-enlaces-aws
-code .
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.lock.txt -r requirements-dev.txt
-Copy-Item .env.example .env
-python -m pytest -q
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe scripts\run_local.py
 ```
 
-Si PowerShell bloquea la activación, usa directamente `.\.venv\Scripts\python.exe` para todos los comandos Python, sin modificar la política de ejecución del equipo. El archivo `requirements.lock.txt` fija las dependencias de ejecución; `requirements.txt` expresa sus rangos permitidos.
+Abre [http://127.0.0.1:5500](http://127.0.0.1:5500). La demo inicia interfaz y API con DynamoDB simulado mediante Moto; no usa AWS. Los datos se borran al detenerla con **Ctrl+C**. Los puertos 5500 y 8000 deben estar libres.
 
-Las pruebas no requieren cuenta AWS y nunca usan credenciales reales. Para ejecutar la API contra DynamoDB real desde tu equipo, configura primero un perfil de AWS CLI/SSO autorizado con GetItem/PutItem sobre tu tabla; no pongas claves en `.env`. Ajusta `DYNAMODB_TABLE`, `AWS_REGION`, `PUBLIC_BASE_URL` y `CORS_ORIGINS` en `.env`.
+Para ejecutar el backend contra una tabla real, copia `.env.example` a `.env`, configura región, tabla, URL pública y orígenes CORS. Utiliza un perfil AWS autorizado en tu equipo o el rol IAM de EC2; no guardes claves en el código ni en `.env`.
 
 ```powershell
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
-En otra terminal sirve la interfaz por HTTP:
+`requirements.txt` fija las dependencias de ejecución; `requirements-dev.txt` añade las herramientas de desarrollo.
 
-```powershell
-.\.venv\Scripts\python.exe -m http.server 5500 --bind 127.0.0.1 --directory frontend
-```
+## API
 
-Abre `http://127.0.0.1:5500` y la documentación interactiva `http://127.0.0.1:8000/docs`. No abras `index.html` mediante `file://`. La API normal utiliza DynamoDB sin alternativa automática en memoria; la demo emulada solo se activa ejecutando explícitamente `scripts/run_local.py`.
-
-## Contrato de API
-
-| Método y ruta | Resultado |
+| Método y ruta | Respuesta |
 | --- | --- |
-| `POST /shorten` | 201 con UUID v4, URL original, enlace generado y fecha UTC |
+| `POST /shorten` | 201 con `short_code`, `original_url`, `short_url` y `created_at` |
 | `GET /{short_code}` | 307 y cabecera `Location` hacia la URL original |
 | `GET /urls/{short_code}` | 200 con UUID, URL original y fecha UTC |
-| `GET /health` | 200 si el proceso responde; no comprueba DynamoDB |
+| `GET /health` | 200 si el proceso está activo |
 
-Ejemplo de cuerpo: `{"original_url":"https://www.example.com/articulos/arquitectura-cloud"}`.
+Cuerpo de ejemplo para `POST /shorten`:
 
-Un UUID inexistente o mal formado devuelve 404; una URL inválida devuelve 422; un fallo conocido del SDK de AWS devuelve 503 sin detalles internos. Solo se aceptan HTTP/HTTPS sin credenciales embebidas, hasta el límite de 2083 caracteres del tipo `HttpUrl`. Las URLs pueden contener información sensible: no se registran en logs de acceso y no se deben compartir destinos privados.
+```json
+{"original_url": "https://www.example.com/"}
+```
 
-## Decisiones de implementación
+Un UUID inexistente devuelve **404**, una URL inválida **422** y un fallo de almacenamiento **503**. Solo se admiten URLs HTTP/HTTPS sin credenciales embebidas. La tabla utiliza `short_code` como clave de partición String; cada elemento incluye `original_url` y `created_at` en UTC.
 
-- Separación de API, validación, lógica y persistencia; dependencias inyectables y cierre del cliente Boto3.
-- Operaciones síncronas de Boto3 en endpoints `def`, ejecutados por FastAPI en su grupo de hilos.
-- UUID v4 completo, escritura condicional que evita sobrescritura y lectura consistente después de crear.
-- Fechas ISO 8601 en UTC. DynamoDB solo declara `short_code` como atributo clave; los otros atributos se incluyen al escribir cada elemento.
-- Configuración mediante entorno; rol IAM de EC2 limitado a `GetItem` y `PutItem` en la tabla concreta; IMDSv2 obligatorio.
-- CORS con el origen exacto del frontend, sin comodines. CORS no es autenticación: esta API es pública según la práctica.
-- Interfaz accesible y adaptable, mensajes de error, espera máxima y copiado con alternativa para HTTP. Datos de la API insertados con `textContent`.
-- systemd reinicia el proceso si falla y lo arranca con la instancia, con usuario sin privilegios y archivos de aplicación de solo lectura.
+## Despliegue en AWS
 
-El UUID completo cumple la consigna, aunque no garantiza que la dirección resultante sea más breve que todos los destinos originales. No se implementan cuentas, analítica ni eliminación de enlaces fuera del alcance solicitado.
+1. Publica el código en un repositorio público de GitHub o GitLab.
+2. En EC2 crea un par de claves y guarda su archivo privado fuera del repositorio.
+3. En CloudFormation carga `infrastructure/stack.yaml`. Indica el repositorio HTTPS, rama `main`, nombre del par de claves y tu IPv4 pública seguida de `/32` para SSH.
+4. Reconoce la creación del rol IAM y espera `CREATE_COMPLETE`. EC2 instala el backend desde GitHub y configura systemd; esta instalación puede tardar unos minutos adicionales.
+5. En las salidas de la pila copia `ApiUrl` a `API_BASE_URL` de `frontend/config.js` para la versión que publicarás.
+6. Sube `index.html`, `styles.css`, `app.js` y `config.js` a la raíz del bucket indicado en `BucketName`. Abre `WebsiteUrl`.
 
-## Publicación y entrega
+El rol de EC2 permite únicamente `dynamodb:GetItem` y `dynamodb:PutItem` sobre su tabla. Boto3 obtiene credenciales temporales del rol. La API permite el origen exacto de S3 mediante CORS. SSH está restringido a `/32`; el puerto 8000 es público. La plantilla publica la interfaz mediante el endpoint web HTTP de S3; usar HTTPS requiere configurarlo también en la API.
 
-Sigue [la guía de AWS](docs/DESPLIEGUE.md) y [las pruebas y guion de entrega](docs/ENTREGA.md). La plantilla usa HTTP para frontend y backend por simplicidad académica. Para un servicio productivo se requiere HTTPS en ambos extremos, control de abuso y límites de uso; CloudFront con HTTPS no puede consumir una API HTTP desde el navegador.
+En EC2 puedes comprobar y reiniciar el servicio:
 
-Fuentes oficiales consultadas:
+```bash
+sudo systemctl status nexo --no-pager
+sudo journalctl -u nexo -n 30 --no-pager
+sudo systemctl restart nexo
+```
 
-- [CORS en FastAPI](https://fastapi.tiangolo.com/tutorial/cors/).
-- [Endpoints de sitios web S3 y limitación de HTTPS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints.html).
-- [Acciones y recursos IAM de DynamoDB](https://docs.aws.amazon.com/service-authorization/latest/reference/list_dynamodb.html).
+## Pruebas y entrega
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+Las **14 pruebas** verifican creación, UUID únicos, validación, consulta, redirección 307, errores 404, CORS, fallos de almacenamiento y persistencia al recrear la aplicación usando DynamoDB emulado.
+
+El despliegue real fue verificado el **29 de octubre de 2026**: formulario y copiado desde S3, registro consultado en DynamoDB, redirección en el navegador y funcionamiento del mismo enlace después de reiniciar systemd. UUID usado: `5d12b480-cf5c-47c9-bee3-ab1a45f35f63`.
+
+Para la entrega, presenta este repositorio y un video mostrando la arquitectura, el rol IAM, S3, EC2, la tabla y el recorrido completo de un enlace, incluyendo 404, consulta JSON y persistencia tras reiniciar el backend.
+
+Los recursos activos pueden generar cargos. Después de la evaluación puedes eliminar la pila; S3 y DynamoDB se retienen y deben eliminarse manualmente si ya no necesitas sus datos.
