@@ -6,6 +6,17 @@ Aplicación con HTML, CSS y JavaScript en **S3**, una API **FastAPI en EC2** y p
 - [Documentación de la API](http://13.216.86.173:8000/docs)
 - Región: `us-east-1`. Stack: `nexo-acortador`.
 
+## Arquitectura
+
+```mermaid
+flowchart LR
+    A["Frontend HTML / CSS / JS"] --> B["FastAPI · EC2"]
+    B --> C[("DynamoDB")]
+    S["S3 sirve el frontend"] --> A
+```
+
+La demo local usa Moto para emular DynamoDB. Los enlaces del despliegue son una referencia del proyecto; su disponibilidad depende de que los recursos sigan activos.
+
 ## Estructura
 
 ```text
@@ -77,7 +88,7 @@ sudo journalctl -u nexo -n 30 --no-pager
 sudo systemctl restart nexo
 ```
 
-## Pruebas y entrega
+## Pruebas y comprobación
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest backend\tests -q
@@ -87,6 +98,6 @@ Las **14 pruebas** verifican creación, UUID únicos, validación, consulta, red
 
 El despliegue real fue verificado el **29 de octubre de 2026**: formulario y copiado desde S3, registro consultado en DynamoDB, redirección en el navegador y funcionamiento del mismo enlace después de reiniciar systemd. UUID usado: `5d12b480-cf5c-47c9-bee3-ab1a45f35f63`.
 
-Para la entrega, presenta este repositorio y un video mostrando la arquitectura, el rol IAM, S3, EC2, la tabla y el recorrido completo de un enlace, incluyendo 404, consulta JSON y persistencia tras reiniciar el backend.
+Para revisar el proyecto, recorre la creación de un enlace, su consulta JSON, la redirección y el caso 404. En un despliegue propio puedes comprobar también la persistencia después de reiniciar el backend.
 
-Los recursos activos pueden generar cargos. Después de la evaluación puedes eliminar la pila; S3 y DynamoDB se retienen y deben eliminarse manualmente si ya no necesitas sus datos.
+Los recursos activos pueden generar cargos. Cuando termines de utilizar el entorno puedes eliminar la pila; S3 y DynamoDB se retienen y deben eliminarse manualmente si ya no necesitas sus datos.
